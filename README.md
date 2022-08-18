@@ -24,6 +24,7 @@ The Compose uses the following images:
 + [Postgres](https://hub.docker.com/_/postgres)
 + [MySQL](https://hub.docker.com/_/mysql)
 + [Adminer](https://hub.docker.com/_/adminer)
++ [Traefik](https://traefik.io/)
 
 > The database images (`mysql`, `postgres`) are created via dockerfiles that a wrap the official images.
 
