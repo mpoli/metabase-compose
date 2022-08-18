@@ -57,7 +57,7 @@ services:
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
-      - "0.0.0.0:8080:8080"
+      - "0.0.0.0:${ADMINER_PORT}:${ADMINER_PORT}"
 
 volumes:
   db-data:
