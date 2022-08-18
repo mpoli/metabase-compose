@@ -62,3 +62,4 @@ services:
 volumes:
   db-data:
   mb-data:
+  production_traefik:
