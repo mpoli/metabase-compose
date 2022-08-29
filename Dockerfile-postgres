@@ -1,4 +1,4 @@
-FROM postgres:13.0
+FROM postgres:14.5
 
 ARG db_name
 ARG db_user=postgres
