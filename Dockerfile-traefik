@@ -3,3 +3,8 @@ RUN mkdir -p /etc/traefik/acme \
   && touch /etc/traefik/acme/acme.json \
   && chmod 600 /etc/traefik/acme/acme.json
 COPY ./traefik.yml /etc/traefik
+
+EXPOSE 80
+EXPOSE 443
+EXPOSE ${MB_PORT}
+EXPOSE ${ADMINER_PORT}

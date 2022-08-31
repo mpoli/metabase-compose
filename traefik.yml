@@ -16,13 +16,13 @@ entryPoints:
     address: ":443"
 
   adminer:
-    address: ":8080"
+    address: ":{{ env "ADMINER_PORT" }}"
 
 certificatesResolvers:
   letsencrypt:
     # https://docs.traefik.io/master/https/acme/#lets-encrypt
     acme:
-      email: "polimarco@gmail.com"
+      email: "{{ env "CERT_EMAIL"}}"
       storage: /etc/traefik/acme/acme.json
       # https://docs.traefik.io/master/https/acme/#httpchallenge
       httpChallenge:
@@ -31,7 +31,7 @@ certificatesResolvers:
 http:
   routers:
     web-secure-router:
-      rule: "Host(`grandescausas.com.br`)"
+      rule: "Host(`{{ env "HOSTNAME"}}`)"
       entryPoints:
         - web-secure
       middlewares:
@@ -42,7 +42,7 @@ http:
         certResolver: letsencrypt
 
     adminer-secure-router:
-      rule: "Host(`grandescausas.com.br`)"
+      rule: "Host(`{{ env "HOSTNAME"}}`)"
       entryPoints:
         - adminer
       service: adminer

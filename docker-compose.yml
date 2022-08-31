@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 services:
   db:
@@ -15,14 +15,16 @@ services:
       - type: volume
         source: ${DB_OUTSIDE_VOLUME}
         target: ${DB_INSIDE_VOLUME}
+    labels:
+      - "traefik.enable=false"
 
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - '${ADMINER_PORT}:5555'
-    depends_on:
-      - 'db'
+  # adminer:
+  #   image: adminer
+  #   restart: always
+  #   ports:
+  #     - '5555:5555'
+  #   depends_on:
+  #     - 'db'
 
   metabase:
     image: metabase/metabase
@@ -38,28 +40,76 @@ services:
       JAVA_TIMEZONE: '${MB_JAVA_TIMEZONE}'
     ports:
       # <Port exposed>:<Port running inside container>
-      - '${MB_PORT}:3000'
+      - '3000:3000'
     volumes:
       # Volumes where Metabase data will be persisted
       - 'mb-data:/metabase-data'
     depends_on:
       - 'db'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`metabase.localhost`)"
+      - "traefik.http.routers.whoami.entrypoints=web"
+
+  # traefik:
+  #   build:
+  #     context: .
+  #     dockerfile: ./Dockerfile-traefik
+  #   image: traefik
+  #   environment:
+  #     MB_PORT: ${MB_PORT}
+  #     ADMINER_PORT: ${ADMINER_PORT}
+  #     CERT_EMAIL: ${CERT_EMAIL}
+  #   depends_on:
+  #     - metabase
+  #   volumes:
+  #     - traefik:/etc/traefik/acme:z
+  #   ports:
+  #     - "0.0.0.0:80:80"
+  #     - "0.0.0.0:${MB_PORT}:5556"
+  #     - "0.0.0.0:${ADMINER_PORT}:5555"
 
   traefik:
-    build:
-      context: .
-      dockerfile: ./Dockerfile-traefik
-    image: production_traefik
-    depends_on:
-      - metabase
-    volumes:
-      - production_traefik:/etc/traefik/acme:z
-    ports:
-      - "0.0.0.0:80:80"
-      - "0.0.0.0:443:443"
-      - "0.0.0.0:5555:${ADMINER_PORT}"
+      image: "traefik:v2.8"
+      container_name: "traefik"
+      command:
+        - "--log.level=DEBUG"
+        - "--api.insecure=true"
+        - "--providers.docker=true"
+        - "--providers.docker.exposedbydefault=false"
+        - "--entrypoints.web.address=:80"
+        # - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+        # - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+        # - "--entrypoints.foo.http.redirections.entrypoint.permanent=true"
+        - "--entrypoints.websecure.address=:443"
+        # - --api=true
+        # - --api.dashboard=true
+        # - --api.debug=true
+        # - --providers.docker.endpoint=unix:///var/run/docker.sock
+        # - --providers.docker.swarmMode=true
+        # - --accesslog=false
+        - "--certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+        - "--certificatesResolvers.letsencrypt.acme.tlsChallenge=true"
+        - "--certificatesresolvers.letsencrypt.acme.email=myemail@gmail.com"
+        - "--certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+        #- --certificatesResolvers.letsencrypt.acme.httpChallenge.entryPoint=web
+      ports:
+        - "80:80"
+        - "443:443"
+        - "8080:8080"
+      volumes:
+        - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  # # Traefik Test Service:
+  # whoami:
+  #   # A container that exposes an API to show its IP address
+  #   image: traefik/whoami
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
+  #     - "traefik.http.routers.whoami.entrypoints=web"
+  #     # - "traefik.http.routers.whoami.entrypoints=websecure"
 
 volumes:
   db-data:
   mb-data:
-  production_traefik:
